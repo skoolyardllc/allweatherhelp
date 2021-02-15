@@ -9,7 +9,7 @@ if(!master_admin_auth())
     header("location: logout");
 }
 
-$sql="select * from master_admin  u where u.email='$id'";
+$sql="select up.*, u.id as uid from users u, user_profile up where u.email='$id' and u.id=up.u_id";
 $res=$conn->query($sql);
 if($res->num_rows > 0)
 {
@@ -18,7 +18,7 @@ if($res->num_rows > 0)
 }
 
  
-$MASTER_ID=$MASTER_DATA['id']; 
+$MASTER_ID=$MASTER_DATA['uid']; 
 
 //user_auth($type,$subadmin);
 
@@ -31,7 +31,7 @@ $MASTER_ID=$MASTER_DATA['id'];
   <title>Admin Panel </title>
   <!-- Tell the browser to be responsive to screen width -->
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
   <!-- Bootstrap 3.3.7 -->
   <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
   <!-- Font Awesome -->
@@ -46,13 +46,17 @@ $MASTER_ID=$MASTER_DATA['id'];
   <!-- AdminLTE Skins. Choose a skin from the css/skins
        folder instead of downloading all of them to reduce the load. -->
   <link rel="stylesheet" href="dist/css/skins/_all-skins.min.css">
-    <link rel="stylesheet" href="plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.min.css">
+  <link rel="stylesheet" href="plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.min.css">
 
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.css" />    
   <!-- Google Font -->
   <link rel="stylesheet"
         href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
+
+    <!--Icon Picker  -->
+    <link rel="stylesheet" href="dist/fontawesome-5.11.2/css/all.min.css">
+    <link rel="stylesheet" href="dist/iconpicker-1.5.0.css">
 	<style>
 .autocomplete-items {
   position: absolute;

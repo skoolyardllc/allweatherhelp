@@ -23,6 +23,8 @@
 
 <!--CKEditor-->
 <script src="https://cdn.ckeditor.com/4.14.1/standard/ckeditor.js"></script>
+<!-- Icon PIcker -->
+<script src="dist/iconpicker-1.5.0.js"></script>
  
 <script>
   $(function () {

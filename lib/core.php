@@ -24,23 +24,51 @@ function user_auth($page,$type)
 {
     if($page!=$type)
         header("location:logout");
-   
 }
 
-
-
-//login method
-function master_admin_login($email,$password,$conn,$path)
+//company login
+function login($email,$password,$conn,$path)
 {
-    $sql="select id from master_admin where email='$email' and password='$password'";
+    $sql="select * from users where email='$email' and password='$password'";
     $res=$conn->query($sql);
     if($res->num_rows > 0)
     {
-        $row=$res->fetch_assoc();  
-        $id=$row['id']; 
-        header("location: $path");
-        $_SESSION['master_admin_signed_in']=$email;
-        $_SESSION['id']=$id; 
+        while($row=$res->fetch_assoc())
+        {
+                $type=$row['type'];
+                $id=$row['id'];
+        }
+        switch($type)
+        {
+            case 1: 
+                header("location: $path");
+                $_SESSION['master_admin_signed_in']=$email;
+                $_SESSION['id']=$id; 
+                break;
+            case 2: $_SESSION['signed_in']=$email;
+                    setcookie("new",$email, time() + (86400 * 80), "/");   
+                    setcookie("pass",$password, time() + (86400 * 80), "/");  
+                    
+                    if(isset($_SESSION['page']))
+                    {
+                        $page_url=$_SESSION['page'];
+                        unset($_SESSION['page']);
+                        header("location: home");
+                    }
+                    else
+                    {
+                        header("location: $path"); 
+                    }
+                    break;
+            case 3:
+                header("location: $path");
+                $_SESSION['com_admin_signed_in']=$email;
+                $_SESSION['id']=$id; 
+                $_SESSION['c_id']=$row['c_id'];
+                break; 
+                
+            default: return false;
+        }
     }
     else
     {
@@ -49,31 +77,9 @@ function master_admin_login($email,$password,$conn,$path)
     }
     return true;
 }
-//user login
-   function user_login($email,$password,$conn,$user,$path)
-    {
-         $sql="select email from users where email='$email' and password='$password' and type=$user";
-        $res=$conn->query($sql);
-        if($res->num_rows > 0)
-        {
-          $_SESSION['signed_in']=$email;
-            setcookie("new",$email, time() + (86400 * 80), "/");   
-			setcookie("pass",$password, time() + (86400 * 80), "/");  
-            
-            if(isset($_SESSION['page']))
-            {
-                $page_url=$_SESSION['page'];
-                unset($_SESSION['page']);
-                header("location: home");
-            }
-            else
-            {
-              header("location: $path"); 
-            }
-        }
-        else
-        return false;
-    }
+
+
+
  
  //check for cookie login
     function cookie_login($conn)
@@ -84,7 +90,7 @@ function master_admin_login($email,$password,$conn,$path)
             {
                 $email=$_COOKIE["new"];
                 $pass=$_COOKIE["pass"];
-                $sql= "select email from users where email='$email' and password='$pass'";
+                $sql= "select email from users where email='$email' and password='$pass' and type=2";
                 $result = $conn->query($sql);
                 if ($result->num_rows > 0) 
                 {
@@ -123,7 +129,7 @@ function master_admin_login($email,$password,$conn,$path)
         if(isset($_SESSION['master_admin_signed_in']))
         {
             $email=$_SESSION['master_admin_signed_in'];
-            $sql="select * from master_admin where email='$email'";
+            $sql="select * from users where email='$email'";
             $res=$conn->query($sql);
             if($res->num_rows > 0)
             {
@@ -374,7 +380,7 @@ function upload_imageu($files,$conn,$table,$column,$id)
     }
 }
 
-function upload_image2($files,$conn,$table,$column,$id,$image)
+function upload_image2($conn,$table,$column,$id,$image)
 {
     $uploadedFile = 'err';
     if(!empty($_FILES[$image]["type"]))
@@ -661,7 +667,7 @@ function image_category()
  
 
 //Upload multiple images 23/04/20
-function upload_images($files,$conn,$table,$id_col,$column,$id,$images,$url)
+function upload_images($files,$conn,$table,$id_col,$column,$id,$images,$path)
 {
 	if(isset($_FILES[$images]))
     {
@@ -670,20 +676,22 @@ function upload_images($files,$conn,$table,$id_col,$column,$id,$images,$url)
         {
             $file_name=$_FILES[$images]["name"][$key];
             $file_tmp=$_FILES[$images]["tmp_name"][$key];
-            $ext=pathinfo($file_name,PATHINFO_EXTENSION); 
-            if(in_array(strtolower($ext),$extension)) 
+            $ext=pathinfo($file_name,PATHINFO_EXTENSION);
+        
+            if(in_array($ext,$extension)) 
             {
                 $filename=basename($file_name,$ext);
                 $newFileName=$filename.time().".".$ext;
                 if(move_uploaded_file($file_tmp=$_FILES[$images]["tmp_name"][$key],"uploads/".$newFileName))
                 {
-                    $sql="insert into $table($id_col, $column) values($id,$url.'/$newFileName')";
+                   echo  $sql="insert into $table($id_col, $column) values($id,'$path/$newFileName')";
                     if($conn->query($sql)===true)
                     {
                         $status=true;
                     }
                     else
                     {
+                        echo $conn->error;
                         $status=false;
                         break;
                     }
@@ -702,6 +710,52 @@ function upload_images($files,$conn,$table,$id_col,$column,$id,$images,$url)
         return $status;
     }
 }
+//upload multiple images
+function upload_images2($files,$conn,$table,$id_col,$column,$id,$images,$path)
+{
+     
+	if(isset($_FILES[$images]))
+    {
+        $extension=array("jpeg","jpg","png","gif","pdf","PDF");
+        foreach($_FILES[$images]["tmp_name"] as $key=>$tmp_name) 
+        {
+            $file_name=$_FILES[$images]["name"][$key];
+            $file_tmp=$_FILES[$images]["tmp_name"][$key];
+            $ext=pathinfo($file_name,PATHINFO_EXTENSION);
+        
+            if(in_array($ext,$extension)) 
+            {
+                $filename=basename($file_name,$ext);
+                $newFileName=$filename.time().".".$ext;
+                if(move_uploaded_file($file_tmp=$_FILES[$images]["tmp_name"][$key],"uploads/".$newFileName))
+                {
+                     $sql="update $table set $column='$path/$newFileName' where $id_col=$id";
+                    if($conn->query($sql)===true)
+                    {
+                        $status=true;
+                    }
+                    else
+                    {
+                          $conn->error;
+                        $status=false;
+                        break;
+                    }
+                }
+                else
+                {
+                    $status=false;
+                    break;
+                }
+            }
+            else 
+            {
+                array_push($error,"$file_name, ");
+            }
+        }
+        return $status;
+    }
+}
+
 						
 ?>
 

@@ -8,7 +8,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
     {
           $email=$conn->real_escape_string(strtolower(trim($_POST['email'])));
           $password=md5($_POST['password']);
-        if(!master_admin_login($email,$password,$conn,"dashboard"))
+        if(!login($email,$password,$conn,"dashboard"))
         {
            $error= "invalid user & Password";
         }else
