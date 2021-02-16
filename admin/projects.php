@@ -156,7 +156,8 @@
                              <th>S.No.</th>
                              <th>Project Title</th>
                              <th>Project Description</th>
-                             <th>Bid Amount</th>
+                             <th>Project Budget</th>
+                             <th>Start Date</th>
                              <th>Action</th>
                         </tr>
                     </thead>
@@ -175,6 +176,7 @@
                                          <td style="  text-align: center; " id="title<?=$i?>"><?=$detail['title'];?></td> 
                                          <td style="  text-align: center; " id="description<?=$i?>"><?=$detail['description'];?></td>
                                          <td style="  text-align: center; " id="bid_amount<?=$i?>"><?=$detail['bid_amount'];?></td>
+                                         <td style="  text-align: center; " id="start_date<?=$i?>"><?=$detail['start_date'];?></td>
                                          <td>
                                         <form method="post">
                                             <a href="viewproject?token=<?=$detail['id']?>" class="btn btn-primary"> <i class="fa fa-eye">View</i> </a>

@@ -329,7 +329,8 @@ if(isset($_GET['token'])&&!empty($_GET['token']))
                              <th>S.No.</th>
                              <th>Title</th>
                              <th>Description</th>
-                             <th>Bid Amount</th>
+                             <th>Project Budget</th>
+                             <th>Start Date</th>
                              <th>Action</th>
                         </tr>
                     </thead>
@@ -348,6 +349,7 @@ if(isset($_GET['token'])&&!empty($_GET['token']))
                                          <td style="  text-align: center; " id="title<?=$i?>"><?=$detail['title'];?></td> 
                                          <td style="  text-align: center; " id="description<?=$i?>"><?=$detail['description'];?></td>
                                          <td style="  text-align: center; " id="bid_amount<?=$i?>"><?=$detail['bid_amount'];?></td>
+                                         <td style="  text-align: center; " id="start_date<?=$i?>"><?=$detail['start_date'];?></td>
                                          <td>
                                         <form method="post">
                                             <button  class="btn btn-danger" type="submit" name="deletep" value="<?=$detail['id']?>">

@@ -150,7 +150,7 @@ if(isset($_GET['token'])&&!empty($_GET['token']))
                                 <th style="  text-align: center; background-color: #808080; color: white;" id="description"><?=$project['description'];?></th>  
                             </tr>
                             <tr> 
-                                <th style="  text-align: center; background-color: #212529; color: white;" >Bid Amount</th>
+                                <th style="  text-align: center; background-color: #212529; color: white;" >Project Budget</th>
                                 <th style="  text-align: center; background-color: #808080; color: white; " id="bid_amount"><?=$project['bid_amount'];?></th>  
                             </tr>
                             <tr> 
@@ -160,6 +160,10 @@ if(isset($_GET['token'])&&!empty($_GET['token']))
                             <tr> 
                                 <th style="  text-align: center; background-color: #212529; color: white;" >Assigned To</th>
                                 <th style="  text-align: center; background-color: #808080; color: white;" id="assigned_to"><?=$project['assigned_to'];?></th>  
+                            </tr>
+                            <tr> 
+                                <th style="  text-align: center; background-color: #212529; color: white;" >Start Date</th>
+                                <th style="  text-align: center; background-color: #808080; color: white;" id="start_date"><?=$project['start_date'];?></th>  
                             </tr>
                     <?php
                         }
