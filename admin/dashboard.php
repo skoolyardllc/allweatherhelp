@@ -1,243 +1,601 @@
 <?php
-require_once 'header.php';
-require_once 'navbar.php';
-require_once 'left-navbar.php';
 
-$sql="SELECT count(id) as count from users where type=3";
-if($result=$conn->query($sql))
-{
-    if($result->num_rows>0)
+	require_once 'header_new.php';
+
+
+
+	if(!isset($_SESSION['user_signed_in']))
+
+	{
+
+		header("location:login");		
+
+	}
+
+
+
+    $sql = "SELECT count(id) as customer from users where type='5'";
+
+    if($result = $conn->query($sql))
+
     {
-        $row=$result->fetch_assoc(); 
-        $contractors=$row['count']; 
-    }
 
-} 
-//fetching blocked comapnies
-$sql="SELECT count(id) as count from users where type=2";
-if($result=$conn->query($sql))
-{
-    if($result->num_rows>0)
-    {
-        $row=$result->fetch_assoc(); 
-        $employers=$row['count']; 
-    }
+        if($result->num_rows > 0)
 
-} 
-
-$sql="SELECT count(id) as count from projects";
-if($result=$conn->query($sql))
-{
-    if($result->num_rows>0)
-    {
-        $row=$result->fetch_assoc(); 
-        $p_total=$row['count']; 
-    }
-}
-
-$sql="select * from projects order by id desc limit 10";
-if($result=$conn->query($sql))
-{
-    if($result->num_rows>0)
-    {
-        while($row=$result->fetch_assoc())
         {
-            $pdetails[]=$row; 
+
+            $customer = $result->fetch_assoc();
+
         }
-        
-    }
-}
 
-$sql="SELECT * from website_details";
-if($result=$conn->query($sql))
-{
-    if($result->num_rows>0)
+    }
+
+    $sql = "SELECT count(id) as business from users where type='2'";
+
+    if($result = $conn->query($sql))
+
     {
-        $row=$result->fetch_assoc(); 
-            $comdata=$row; 
+
+        if($result->num_rows > 0)
+
+        {
+
+            $business = $result->fetch_assoc();
+
+        }
+
     }
-}
 
+    $sql = "SELECT count(id) as contractor from users where type='3'";
 
+    if($result = $conn->query($sql))
+
+    {
+
+        if($result->num_rows > 0)
+
+        {
+
+            $contractor = $result->fetch_assoc();
+
+        }
+
+    }
+
+    $sql = "SELECT count(id) as task from post_task";
+
+    if($result = $conn->query($sql))
+
+    {
+
+        if($result->num_rows > 0)
+
+        {
+
+            $task = $result->fetch_assoc();
+
+        }
+
+    }
+
+    $sql = "SELECT count(distinct(milestone_id)) as payment from milestones_payment";
+
+    if($result = $conn->query($sql))
+
+    {
+
+        if($result->num_rows > 0)
+
+        {
+
+            $payment = $result->fetch_assoc();
+
+        }
+
+    }
+
+    $sql = "SELECT count(id) as review from accepted_task where review!=''";
+
+    if($result = $conn->query($sql))
+
+    {
+
+        if($result->num_rows > 0)
+
+        {
+
+            $review = $result->fetch_assoc();
+
+        }
+
+    }
+
+    $sql = "SELECT count(id) as emp from employer_reviews";
+
+    if($result = $conn->query($sql))
+
+    {
+
+        if($result->num_rows > 0)
+
+        {
+
+            $emp = $result->fetch_assoc();
+
+        }
+
+    }
 
 ?>
-<!-- Content Wrapper. Contains page content -->
 
-<div class="content-wrapper">
-    <!-- Content Header (Page header) -->
-    <section class="content-header">
-        <h1>
-            Dashboard
-        </h1>
-        <ol class="breadcrumb">
-            <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
-            <li class="active">Dashboard</li>
-        </ol>
-    </section>
 
-    <!-- overview section -->
 
-    <section class="content">
-        <div class="row">
-            <div class="col-md-6">
-            <!-- Info Boxes Style 2 -->
-                <a href="contractor?token=1" style="background-color: white;">
-                    <div class="info-box mb-3 bg-yellow">
-                        <span class="info-box-icon"><i class="fa fa-building"></i></span>
-                        <div class="info-box-content">
-                            <span class="info-box-text">Contractors</span>
-                            <span class="info-box-number"><?=$contractors?></span>
-                        </div>
-                        <!-- /.info-box-content -->
-                    </div>
-                </a>
-                <!-- /.info-box -->
-                <a href="employers?token=1" style="background-color: white;">
-                    <div class="info-box mb-3 bg-green">
-                        <span class="info-box-icon"><i class="fa fa-tasks"></i></span>
-                        <div class="info-box-content">
-                            <span class="info-box-text">Employers</span>
-                            <span class="info-box-number"><?=$employers?></span>
-                        </div>
-                        <!-- /.info-box-content -->
-                    </div>
-                </a>
+<body>
 
-                <a href="projects?token=1" style="background-color: white;">
-                    <div class="info-box mb-3 bg-red">
-                        <span class="info-box-icon"><i class="fa fa-user-plus"></i></span>
-                        <div class="info-box-content" style="color: white;">
-                            <span class="info-box-text">Projects</span>
-                            <span class="info-box-number"><?=$p_total?></span>
-                        </div>
-                        <!-- /.info-box-content -->
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-5">
-            <?php
-                if(isset($comdata))
-                {
-            ?>
-                    
-                    <div class="card card-widget widget-user-2 shadow-sm">
-                        <div class="widget-user-header bg-yellow">
-                            <div class="widget-user-image">
-                                <img class="img-circle elevation-2" style="width: 80px; height: 80px; float: left;"src="<?=$comdata['logo']?>" alt="User Avatar">
-                            </div>
-                            <h3 class="widget-user-username" ><?=$comdata['title']?></h3>
-                            <h5 class="widget-user-desc">&nbsp<?=$comdata['sub_title']?></h5>
-                        </div>
-                        <div class="card-footer p-0" style="background-color: white; ">
-                            <ul class="nav flex-column">
-                                <li class="nav-item">
-                                    <a href="#" class="nav-link">
-                                        Email <span class="float-right badge bg-blue" "><?=$comdata['email']?></span>
+	<!-- wrapper -->
+
+	<div class="wrapper">
+
+		<?php
+
+			require_once 'sidebar.php';
+
+			require_once 'navbar.php';
+
+		?>
+
+
+
+		<!--page-wrapper-->
+
+		<div class="page-wrapper">
+
+			<!--page-content-wrapper-->
+
+			<div class="page-content-wrapper">
+
+				<div class="page-content">
+
+				<div class="row">
+
+						<div class="col-12 col-lg-12 col-xl-6">
+
+							<div class="card-deck flex-column flex-lg-row">
+
+								<div class="card radius-15 bg-info">
+
+									<a href="customer">
+
+										<div class="card-body text-center">
+
+											<div class="widgets-icons mx-auto rounded-circle bg-white"><i class='lni lni-user'></i>
+
+											</div>
+
+											<h4 class="mb-0 font-weight-bold mt-3 text-white"><?=$customer['customer']?></h4>
+
+											<p class="mb-0 text-white">Customers</p>
+
+										</div>
+
+									</a>
+
+								</div>
+
+								<div class="card radius-15 bg-wall">
+
+									<a href="business">
+
+										<div class="card-body text-center">
+
+											<div class="widgets-icons mx-auto bg-white rounded-circle"><i class='bx bx-group'></i>
+
+											</div>
+
+											<h4 class="mb-0 font-weight-bold mt-3 text-white"><?=$business['business']?></h4>
+
+											<p class="mb-0 text-white">Business / LLC</p>
+
+										</div>
+
+									</a>	
+
+								</div>
+
+								<div class="card radius-15 bg-rose">
+
+									<a href="contractor">
+
+										<div class="card-body text-center">
+
+											<div class="widgets-icons mx-auto bg-white rounded-circle"><i class='lni lni-users'></i>
+
+											</div>
+
+											<h4 class="mb-0 font-weight-bold mt-3 text-white"><?=$contractor['contractor']?></h4>
+
+											<p class="mb-0 text-white">Contractors</p>
+
+										</div>
+
+									</a>
+
+								</div>
+
+								
+
+							</div>
+
+							
+
+						</div>
+
+						<div class="col-12 col-lg-12 col-xl-6">
+
+							<div class="card-deck flex-column flex-lg-row" style="height:100%">
+
+								<div class="card radius-15 bg-danger">
+
+
+                                    <a href="alltasks" >
+										<div class="card-body text-center">
+
+											<div class="widgets-icons mx-auto rounded-circle bg-white"><i class='lni lni-unlink'></i>
+
+											</div>
+
+											<h4 class="mb-0 font-weight-bold mt-3 text-white"><?=$task['task']?></h4>
+
+											<p class="mb-0 text-white">Tasks</p>
+
+										</div>
+									</a>
+
+								</div>
+
+								<div class="card radius-15 bg-primary">
+                                    <a href="transactions">
+										<div class="card-body text-center">
+
+											<div class="widgets-icons mx-auto bg-white rounded-circle"><i class="lni lni-dollar"></i>
+
+											</div>
+
+											<h4 class="mb-0 font-weight-bold mt-3 text-white"><?=$payment['payment']?></h4>
+
+											<p class="mb-0 text-white">Transactions</p>
+
+										</div>
                                     </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="#" class="nav-link">
-                                    Mobile<span class="float-right badge bg-green"><?=$comdata['mobile']?></span>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="#" class="nav-link">
-                                    Address<span class="float-right badge bg-red"><?=$comdata['address']?></span>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="#" class="nav-link">
-                                    About<span class="float-right badge bg-pink"><?=$comdata['about']?></span>
-                                    </a>
-                                </li>
-                                
-                            </ul>
-                        </div>
-                    </div>
-            <?php
-                }
-            ?>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header border-transparent" style="background-color: #343a40;">
-                        <h3 class="card-title" style="color: white;">Latest Projects</h3>
-                    </div>
-                    <!-- /.card-header -->
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table m-0" style="border-spacing: 2px;  font-size: 16px;">
-                                <thead style="font-weight: 800; background-color: #6c757d; color: white;">
-                                    <tr>
-                                        <th style="text-align: center;">S.no.</th>
-                                        <th style="text-align: center;">Title</th>
-                                        <th style="text-align: center;">Status</th>
-                                        <th style="text-align: center;">Start Date</th>
-                                        <th style="text-align: center;">Project Budget</th>
-                                    </tr>
-                                </thead>
-                                <tbody style="text-align: center;">
-                                    <?php
-                                        if(isset($pdetails))
-                                        {
-                                            $i=1;
-                                            foreach($pdetails as $data)
-                                            {
-                                    ?>
-                                                <tr>
-                                                    <td style="padding: 12px; color: #17a2b8;"><?=$i?></td>
-                                                    <td style="padding: 12px;"><?=$data['title']?></td>
-                                                    <td style="padding: 12px;">
-                                                    <?php
-                                                        if($data['status']==1)
-                                                        {
-                                                            ?>
-                                                            <span class="badge badge-danger">Hold</span>
-                                                            <?php
-                                                        }
-                                                        else if($data['status']==2)
-                                                        {
-                                                            ?>
-                                                            <span class="badge badge-warning">Active</span>
-                                                            <?php
-                                                        }
-                                                        else if($data['status']==3)
-                                                        {
-                                                            ?>
-                                                            <span class="badge badge-success">Completed</span>
-                                                            <?php
-                                                        }
-                                                    ?>
-                                                    </td>
-                                                    <td style="padding: 12px;">
-                                                    <?=$data['start_date']?>
-                                                    </td>
-                                                    <td style="padding: 12px;">
-                                                    <?=$data['bid_amount']?>
-                                                    </td>
-                                                    
-                                                </tr>
-                                    <?php
-                                                $i++;
-                                            }
-                                        }
-                                    ?>
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="card-footer clearfix">
-                            <a href="projects?token=1" class="btn btn-sm btn-info float-right">View All Projects</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-</div>
+								</div>
 
-<div class="control-sidebar-bg"></div>
+								<div class="card radius-15 bg-success">			
+
+										<div class="card-body text-center">
+
+											<div class="widgets-icons mx-auto bg-white rounded-circle"><i class='bx bx-cloud-download'></i>
+
+											</div>
+
+											<h4 class="mb-0 font-weight-bold mt-3 text-white"><?=$review['review'] + $emp['emp']?></h4>
+
+											<p class="mb-0 text-white">Reviews</p>
+
+										</div>
+
+								</div>
+
+							</div>
+
+						</div>
+
+					</div>
+
+					<div class="row">
+
+						<div class="col-12 col-lg-12 mx-auto">
+							<div class="card radius-15">
+								<div class="card-body">
+									<div class="card-title">
+										<h4 class="mb-0">Transactions</h4>
+									</div>
+									<hr/>
+									<div class="chart-container1">
+										<canvas id="chart1"></canvas>
+									</div>
+								</div>
+							</div>
+							<div class="card radius-15">
+								<div class="card-body">
+									<div class="card-title">
+										<h4 class="mb-0">Tasks Posted</h4>
+									</div>
+									<hr/>
+									<div class="chart-container1">
+										<canvas id="taskChart"></canvas>
+									</div>
+								</div>
+							</div>
+						</div>
+
+					</div>
+
+					
+
+					
+
+					<!--end row-->
+
+					
+
+
+
+				</div>
+
+			</div>
+
+			<!--end page-content-wrapper-->
+
+		</div>
+
+		<!--end page-wrapper-->
+
+		<!--start overlay-->
+
+		<div class="overlay toggle-btn-mobile"></div>
+
+		<!--end overlay-->
+
+		<!--Start Back To Top Button--> <a href="javaScript:;" class="back-to-top"><i class='bx bxs-up-arrow-alt'></i></a>
+
+		<!--End Back To Top Button-->
+
+		<!--footer -->
+
+		<div class="footer">
+
+			<p class="mb-0">All Weather Help @<?=date("Y")?>| Developed By : <a href="https://www.cyberflow.in" target="_blank">CyberFlow</a>
+
+			</p>
+
+		</div>
+
+		<!-- end footer -->
+
+	</div>
+
+	<!-- end wrapper -->
+
+
+
+	<!--end switcher-->
+
+	
+
+</body>
+
 <?php
-require_once 'js-links.php';
+
+	require_once 'javascript.php';
+
 ?>
+
+</html>
+<script>
+	$(document).ready(function(){
+		$.get('dashboard_ajax.php?transaction_graph=true',function(response)
+		{
+			console.log(response);
+			if(response.msg=="ok")
+			{
+    			var ctx = document.getElementById('chart1').getContext('2d');
+    
+    			var myChart = new Chart(ctx, {
+    
+    				type: 'line',
+    
+    				data: {
+    
+    					labels: ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL' , 'AUG' , 'SEPT' , 'OCT' , 'NOV' , 'DEC'],
+    
+    					datasets: [{
+    
+    						label: 'Transactions',
+    
+    						data: response.amount_new,
+    
+    						backgroundColor: "transparent",
+    
+    						borderColor: "#673ab7",
+    
+    						pointRadius: "0",
+    
+    						borderWidth: 4
+    
+    					}]
+    
+    				},
+    
+    				options: {
+    
+    					maintainAspectRatio: false,
+    
+    					legend: {
+    
+    						display: true,
+    
+    						labels: {
+    
+    							fontColor: '#585757',
+    
+    							boxWidth: 40
+    
+    						}
+    
+    					},
+    
+    					tooltips: {
+    
+    						enabled: true
+    
+    					},
+    
+    					scales: {
+    
+    						xAxes: [{
+    
+    							ticks: {
+    
+    								beginAtZero: true,
+    
+    								fontColor: '#585757'
+    
+    							},
+    
+    							gridLines: {
+    
+    								display: true,
+    
+    								color: "rgba(0, 0, 0, 0.07)"
+    
+    							},
+    
+    						}],
+    
+    						yAxes: [{
+    
+    							ticks: {
+    
+    								beginAtZero: true,
+    
+    								fontColor: '#585757'
+    
+    							},
+    
+    							gridLines: {
+    
+    								display: true,
+    
+    								color: "rgba(0, 0, 0, 0.07)"
+    
+    							},
+    
+    						}]
+    
+    					}
+    
+    				}
+    
+    			});
+			}
+			    
+		},"JSON")
+	})
+	$.get('dashboard_ajax.php?tasks_graph=true',function(response){
+	    console.log(response);
+	    
+	    if(response.msg=="ok")
+	    {
+    	    var ctx = document.getElementById('taskChart').getContext('2d');
+    
+    		var myChart = new Chart(ctx, {
+    
+    				type: 'line',
+    
+    				data: {
+    
+    					labels: ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL' , 'AUG' , 'SEPT' , 'OCT' , 'NOV' , 'DEC'],
+    
+    					datasets: [{
+    
+    						label: 'Tasks Posted',
+    
+    						data: response.amount_new,
+    
+    						backgroundColor: "transparent",
+    
+    						borderColor: "#673ab7",
+    
+    						pointRadius: "0",
+    
+    						borderWidth: 4
+    
+    					}]
+    
+    				},
+    
+    				options: {
+    
+    					maintainAspectRatio: false,
+    
+    					legend: {
+    
+    						display: true,
+    
+    						labels: {
+    
+    							fontColor: '#585757',
+    
+    							boxWidth: 40
+    
+    						}
+    
+    					},
+    
+    					tooltips: {
+    
+    						enabled: true
+    
+    					},
+    
+    					scales: {
+    
+    						xAxes: [{
+    
+    							ticks: {
+    
+    								beginAtZero: true,
+    
+    								fontColor: '#585757'
+    
+    							},
+    
+    							gridLines: {
+    
+    								display: true,
+    
+    								color: "rgba(0, 0, 0, 0.07)"
+    
+    							},
+    
+    						}],
+    
+    						yAxes: [{
+    
+    							ticks: {
+    
+    								beginAtZero: true,
+    
+    								fontColor: '#585757'
+    
+    							},
+    
+    							gridLines: {
+    
+    								display: true,
+    
+    								color: "rgba(0, 0, 0, 0.07)"
+    
+    							},
+    
+    						}]
+    
+    					}
+    
+    				}
+    
+    			});
+	    }
+	},"JSON")
+
+</script>

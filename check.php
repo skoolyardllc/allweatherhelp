@@ -73,7 +73,7 @@
                                         </li>
                                         <li><a href="#">Browse Tasks</a>
                                             <ul class="dropdown-nav">
-                                                <li><a href="search_task.php">Find Tasks</a></li>
+                                                <li><a href="search_task">Find Tasks</a></li>
                                                 <li><a href="tasks-list-layout-2.html">List Layout 2</a></li>
                                                 <li><a href="tasks-grid-layout.html">Grid Layout</a></li>
                                                 <li><a href="tasks-grid-layout-full-page.html">Full Page Grid</a></li>
@@ -107,7 +107,7 @@
                                                 <li><a href="dashboard-post-a-task.html">Post a Task</a></li>
                                             </ul>
                                         </li>
-                                        <li><a href="editProfile.php">Settings</a></li>
+                                        <li><a href="editProfile">Settings</a></li>
                                     </ul>
                                 </li>
 
@@ -317,9 +317,9 @@
                                     <ul class="user-menu-small-nav">
                                         <li><a href="dashboard.html"><i class="icon-material-outline-dashboard"></i>
                                                 Dashboard</a></li>
-                                        <li><a href="editProfile.php"><i class="icon-material-outline-settings"></i>
+                                        <li><a href="editProfile"><i class="icon-material-outline-settings"></i>
                                                 Settings</a></li>
-                                        <li><a href="logout.php"><i
+                                        <li><a href="logout"><i
                                                     class="icon-material-outline-power-settings-new"></i> Logout</a></li>
                                     </ul>
 
@@ -745,7 +745,7 @@
                                 <!-- Social Icons -->
                                 <div class="footer-row">
                                     <div class="footer-row-inner">
-                                        <ul class="footer-social-links">
+                                        <!-- <ul class="footer-social-links">
                                             <li>
                                                 <a href="#" title="Facebook" data-tippy-placement="bottom"
                                                     data-tippy-theme="light">
@@ -770,7 +770,7 @@
                                                     <i class="icon-brand-linkedin-in"></i>
                                                 </a>
                                             </li>
-                                        </ul>
+                                        </ul> -->
                                         <div class="clearfix"></div>
                                     </div>
                                 </div>

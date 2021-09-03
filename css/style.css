@@ -6437,6 +6437,10 @@ table.basic-table { margin-bottom: 0; }
 	background: #66676b;
 	overflow: hidden;
 }
+ /* .ahref-hover{
+
+	color:snow;
+} */
 
 .tabs-header .tab-hover {
 	position: absolute;

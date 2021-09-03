@@ -1,5 +1,7 @@
-<?php
-    session_start();
+<?php session_start();
+    ob_start();
+
+
     require_once'PHPMailer/PHPMailerAutoload.php';
     require_once'config.php';   
 
@@ -18,87 +20,139 @@ function check_page($id,$conn)
 }
  
 
- 
+
 //check user authpage
-function user_auth($page,$type)
+function user_auth()
 {
-    if($page!=$type)
-        header("location:logout");
+    if (!isset($_SESSION['user_signed_in']))
+        {
+            if($_SERVER['REQUEST_URI']!='/login')
+            {
+                $_SESSION['page']=$_SERVER['REQUEST_URI'];   
+                
+            }
+            return false; // IMPORTANT: Be sure to exit here!
+        }
+        else
+        {
+            session_regenerate_id(true);
+            return true;
+        }
+}
+
+    
+function user_login_with_social($email,$conn,$user,$s_type)
+{
+    $sql="select email,id,type from users where email='$email' ";
+    $res=$conn->query($sql);
+    if($res->num_rows > 0)
+    {   
+        $row=$res->fetch_assoc(); 
+        $type=$row['type'];
+        // print_r($row);
+        $id=$row['id'];
+        $_SESSION['user_signed_in']=$email;
+        $_SESSION['user_id']=$id;  
+        $_SESSION['type']=$type;
+        setcookie("new",$email, time() + (86400 * 80), "/");    
+        setcookie("pass","", time() + (86400 * 80), "/");   
+        setcookie("sign_in_type",$s_type,time() + (86400 * 80), "/");
+        return true;
+    }
+    else
+    return false;
 }
 
 //company login
 function login($email,$password,$conn,$path)
 {
+    
     $sql="select * from users where email='$email' and password='$password'";
     $res=$conn->query($sql);
     if($res->num_rows > 0)
     {
-        while($row=$res->fetch_assoc())
+        $row=$res->fetch_assoc(); 
+        $type=$row['type'];
+        $id=$row['id'];
+        
+        // switch($type)
+        // {
+        //     // case 1: 
+        //     //     header("location: $path");
+        //     //     $_SESSION['master_admin_signed_in']=$email;
+        //     //     $_SESSION['id']=$id; 
+        //     //     break;
+        //     case 2: 
+        //         header("location: $path");
+        //         $_SESSION['user_signed_in']=$email;
+        //         $_SESSION['id']=$id;  
+        //         break;
+        //     case 3: 
+        //         break;
+        //     default: return false;
+        // }
+        $_SESSION['user_signed_in']=$email;
+        $_SESSION['user_id']=$id;  
+        $_SESSION['type']=$type;  
+        setcookie("email",$email, time() + (86400 * 80), "/");   
+        setcookie("pass",$password, time() + (86400 * 80), "/");
+        if($path=='dashboard')
         {
-                $type=$row['type'];
-                $id=$row['id'];
+            header("location: dashboard");
+            return true;
         }
-        switch($type)
+        if($path=='editProfile')
         {
-            case 1: 
-                header("location: $path");
-                $_SESSION['master_admin_signed_in']=$email;
-                $_SESSION['id']=$id; 
-                break;
-            case 2: $_SESSION['signed_in']=$email;
-                    setcookie("new",$email, time() + (86400 * 80), "/");   
-                    setcookie("pass",$password, time() + (86400 * 80), "/");  
-                    
-                    if(isset($_SESSION['page']))
-                    {
-                        $page_url=$_SESSION['page'];
-                        unset($_SESSION['page']);
-                        header("location: home");
-                    }
-                    else
-                    {
-                        header("location: $path"); 
-                    }
-                    break;
-            case 3:
-                header("location: $path");
-                $_SESSION['com_admin_signed_in']=$email;
-                $_SESSION['id']=$id; 
-                $_SESSION['c_id']=$row['c_id'];
-                break; 
-                
-            default: return false;
+            header("location: editProfile");
+            return true;
         }
+        if($type==3)
+        {
+            header("location: search_task");
+            return true;
+        }
+        if(isset($_SESSION['page']))
+        {
+            $page_url=$_SESSION['page'];
+            unset($_SESSION['page']);
+            header("location: home");
+        }
+        else
+        {
+
+            header("location: $path");
+            return true;
+        }
+        
     }
     else
     {
         return false;
-
     }
-    return true;
+   
 }
-
 
 
  
  //check for cookie login
     function cookie_login($conn)
     {
-        if (!isset($_SESSION['signed_in']))
-        {  
-            if(isset($_COOKIE["new"]) && isset($_COOKIE["pass"]))
+        if (!isset($_SESSION['user_signed_in']))
+        {         
+            if(isset($_COOKIE["email"]) && isset($_COOKIE["pass"]))
             {
-                $email=$_COOKIE["new"];
+                $email=$_COOKIE["email"];
                 $pass=$_COOKIE["pass"];
-                $sql= "select email from users where email='$email' and password='$pass' and type=2";
+                $sql= "select email,type,id from users where email='$email' and password='$pass'";
                 $result = $conn->query($sql);
                 if ($result->num_rows > 0) 
                 {
-	               $_SESSION['signed_in']=$email;
+                    $row = $result->fetch_assoc();
+                   $_SESSION['user_signed_in']=$email;
+                   $_SESSION['user_id']=$row['id'];  
+                   $_SESSION['type']=$row['type'];  
                 }
-        
             }
-
         }
     }
 
@@ -382,30 +436,29 @@ function upload_imageu($files,$conn,$table,$column,$id)
 
 function upload_image2($conn,$table,$column,$id,$image)
 {
-    $uploadedFile = 'err';
+     $uploadedFile = 'err';
     if(!empty($_FILES[$image]["type"]))
     {
-        $fileName = time().'_'.str_replace(' ', '',$_FILES[$image]['name']);
+         $fileName = time().'_'.str_replace(' ', '',$_FILES[$image]['name']);
         $valid_extensions = array("jpeg", "jpg", "png","bmp","JPG");
         $temporary = explode(".", $_FILES[$image]["name"]);
         $file_extension = end($temporary);
         if((($_FILES[$image]["type"] == "image/png") || ($_FILES[$image]["type"] == "image/bmp") || ($_FILES[$image]["type"] == "image/jpg") || ($_FILES[$image]["type"] == "image/JPG") || ($_FILES[$image]["type"] == "image/jpeg")) && in_array($file_extension, $valid_extensions))
         {
             $sourcePath = $_FILES[$image]['tmp_name'];
-            $targetPath = "uploads/".$fileName;
+             $targetPath = "uploads/".$fileName;
             if(move_uploaded_file($sourcePath,$targetPath))
             {
                 $uploadedFile = $fileName;
                 if(isset($table))
                 {
-                    $sql="update $table set $column='$targetPath' where id=$id";
+                          $sql="update $table set $column='$targetPath' where u_id=$id";
                     if($conn->query($sql)===true)
                     {
                         return $uploadedFile;
                     }
                     else
-                    {
-                        echo $fileName;
+                    {  
                         unlink("uploads/".$fileName);
                         return 'err';
                     }
@@ -432,9 +485,39 @@ function upload_image2($conn,$table,$column,$id,$image)
     }
 }
 
-// function the show cart details
- 
-// function for add user cart value in the cart
+
+//function to upload document
+function upload_document($files)
+{
+     $uploadedFile = 'err';
+    if(!empty($_FILES['images']["type"]))
+    {
+        $fileName = time().'_'.$_FILES['images']['name'];
+        $valid_extensions = array("jpeg", "jpg","png","pdf","bmp","JPG");
+        $temporary = explode(".", $_FILES['images']["name"]);
+        $file_extension = end($temporary);
+        if((($_FILES['images']["type"] == "image/png") || ($_FILES['images']["type"] == "application/pdf") || ($_FILES['images']["type"] == "image/bmp") || ($_FILES['images']["type"] == "image/jpg") || ($_FILES['images']["type"] == "image/JPG") || ($_FILES['images']["type"] == "image/jpeg")) && in_array($file_extension, $valid_extensions))
+        {
+            $sourcePath = $_FILES['images']['tmp_name'];
+            $targetPath = "uploads/".$fileName;
+            if(move_uploaded_file($sourcePath,$targetPath))
+            {
+                $uploadedFile = $fileName;
+                return $uploadedFile;
+            }
+            else
+            {
+                $uploadedFile="err";
+                 return $uploadedFile;
+            }
+        }
+        else
+        {
+            $uploadedFile="err";
+            return $uploadedFile;
+        }
+    }
+}
  
 
 

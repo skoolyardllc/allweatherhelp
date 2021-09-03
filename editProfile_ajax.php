@@ -1,5 +1,6 @@
 <?php
     require_once 'lib/core.php';
+    // require_once 'header.php';
 
     if (isset($_POST['changeAccount_type'])){
         $user_id = $_POST['userId'];
@@ -36,9 +37,8 @@
 
     if (isset($_POST['delete_skill'])){
         $id = $_POST['id'];
-        // $skill = $_POST['skill'];
 
-        $sql="delete from skills where u_id = $id";
+        echo $sql="delete from skills where id = $id";
         if ($conn->query($sql)){
             $qna['msg']='success';
             echo json_encode($qna);
@@ -96,6 +96,47 @@
         if ($conn->query($sql)){
             $qna['msg']='success';
             echo json_encode($qna);
+        }
+    }
+
+    //updating user pic 
+    if(isset($_POST['updateImage']))
+    {
+         
+        $user_id = $_POST['user_id'];
+        $status =  upload_image2($conn,'user_profile','avtar',$user_id,'avatar');
+         $result=[];
+         $result['msg'] = $status;
+         echo json_encode($result);
+        //  echo "happy";
+    }
+
+    // //updating files
+    // if(isset($_POST['updateFile']))
+    // {
+    //     $user_id = $_POST['user_id'];
+    //     $status =  upload_image2($conn,'user_profile','avtar',$user_id,'avatar');
+    //      $result=[];
+    //      $result['msg'] = $status;
+    //      echo json_encode($result);
+    // }
+
+    //updating files
+    if(isset($_POST['updateFile'])){
+
+        $user_id = $_POST['user_id'];
+        $status =  upload_image('image');
+        $result=[];
+        $result['msg'] = $status;
+        echo json_encode($result);
+        $sql = "update insurance set document='$status' where u_id='$user_id'";
+        if($result = $conn->query($sql))
+        {
+            // echo 'happy diwali';
+        }
+        else 
+        {
+            echo $conn->error;
         }
     }
 ?>

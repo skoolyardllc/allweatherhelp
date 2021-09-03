@@ -81,8 +81,8 @@
                         <!-- Breadcrumbs -->
                         <nav id="breadcrumbs" class="dark">
                             <ul>
-                                <li><a href="#">Home</a></li>
-                                <li><a href="#">Dashboard</a></li>
+                                <li><a href="index">Home</a></li>
+                                <li><a href="dashboard">Dashboard</a></li>
                                 <li>Post a Job</li>
                             </ul>
                         </nav>
@@ -179,7 +179,7 @@
                                                 <h5>Location</h5>
                                                 <div class="input-with-icon">
                                                     <div id="autocomplete-container">
-                                                        <input name="location" id="autocomplete-input" class="with-border" type="text" placeholder="Type Address">
+                                                        <input name="location" id="" class="with-border" type="text" placeholder="Type Address">
                                                     </div>
                                                     <i class="icon-material-outline-location-on"></i>
                                                 </div>
@@ -249,7 +249,7 @@
                     <!-- Footer -->
                     <div class="dashboard-footer-spacer"></div>
                     <div class="small-footer margin-top-15">
-                        <ul class="footer-social-links">
+                        <!-- <ul class="footer-social-links">
                             <li>
                                 <a href="#" title="Facebook" data-tippy-placement="top">
                                     <i class="icon-brand-facebook-f"></i>
@@ -270,7 +270,7 @@
                                     <i class="icon-brand-linkedin-in"></i>
                                 </a>
                             </li>
-                        </ul>
+                        </ul> -->
                         <div class="clearfix"></div>
                     </div>
                     <!-- Footer / End -->

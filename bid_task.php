@@ -1,108 +1,183 @@
 <?php
-    require_once 'header.php';
+require_once 'header.php';
 
-    if(isset($_GET['token']) and !empty($_GET['token']))
-    {
-        $t_id=$conn->real_escape_string($_GET['token']);
+if (isset($_GET['token']) and !empty($_GET['token'])) 
+{
+    $t_id = $conn->real_escape_string($_GET['token']);
 
-        if(isset($_POST['placeBid'])){
-            $time_type = $conn->real_escape_string($_POST['time_type']);
-            $time_no = $conn->real_escape_string($_POST['time_no']);
-            $description = $conn->real_escape_string($_POST['description']);
-            $bid_expected = $_POST['bid_expected'];
-    
-            $sql = "insert into bidding (t_id,c_id,time_no,time_type,description) values('$t_id','$USER_ID','$time_no','$time_type','$description')";
-            if($conn->query($sql))
+    if (isset($_POST['placeBid'])) {
+        $time_type = $conn->real_escape_string($_POST['time_type']);
+        $time_no = $conn->real_escape_string($_POST['time_no']);
+        $description = $conn->real_escape_string($_POST['description']);
+        $bid_expected = $_POST['bid_expected'];
+        $sql="select e_id from post_task where id='$t_id'";
+        if ($res = $conn->query($sql)) 
+        {
+            if ($res->num_rows) 
             {
-                $insertId = $conn->insert_id;
-                $sql = "update bidding set bid_expected='$bid_expected' where id='$insertId'"; 
-                if($conn->query($sql))
-                {
-                    $bidded =true;
-                } 
-                else{
-                    $error =$conn->error;
-                }
+                $row1 = $res->fetch_assoc();
+                    $for_id = $row1['e_id'];
+                    $done = "Your bid has been submitted successfully";
             }
         }
 
-
-
-
-        $sql = "select * from post_task where id='$t_id'";
-        if($result =$conn->query($sql))
+        $sql = "insert into bidding (t_id,c_id,time_no,time_type,description,stat) values('$t_id','$USER_ID','$time_no','$time_type','$description',0)";
+        if ($conn->query($sql)) 
         {
-            if($result->num_rows)
+            $insertId = $conn->insert_id;
+            $sql = "update bidding set bid_expected='$bid_expected' where id='$insertId'";
+            if ($conn->query($sql)) 
             {
-                $row=$result->fetch_assoc();
-                $taskDetails = $row;
-            } 
-        }
-
-        $sql = "select * from skill_tasks where t_id='$t_id'";
-        if($result =$conn->query($sql))
-        {
-            if($result->num_rows)
-            {
-                while($row=$result->fetch_assoc()){
-                    $skills[] = $row;
+                $sql2="insert into notifications(msg, link, for_id, status,task) values('You have a new bid', 'manage_bidder.php?token=$t_id', '$for_id', 1,'$t_id')";
+                if ($conn->query($sql2)) 
+                {
+                    $resMember=true;
+                }
+                else
+                {
+                    $error = $conn->error;
                 }
             } 
-        }
-
-        $sql = "select up.*,r.* from user_profile up,post_task pt,ratings r  where pt.id='$t_id' and pt.e_id=up.u_id and pt.e_id=r.u_id";
-        if($result =$conn->query($sql))
-        {
-            if($result->num_rows)
+            else 
             {
-                $row=$result->fetch_assoc();
-                $employerDetails = $row;
-            } 
+                $error = $conn->error;
+            }
         }
+    }
 
-        // $sql = "select * from ratings where t_id='$t_id'";
-        // if($result =$conn->query($sql))
-        // {
-        //     if($result->num_rows)
-        //     {
-        //         while($row=$result->fetch_assoc()){
-        //             $ratings[] = $row;
-        //         }
-        //     } 
-        // }
-
-        $sql = "select up.*,b.* from bidding b , user_profile up where b.t_id='$t_id' and b.c_id=up.u_id ";
-        if($result =$conn->query($sql))
+    
+    $sql="select * from bookmarks where u_id='$USER_ID' and t_id='$t_id'";
+    if ($res = $conn->query($sql)) 
+    {
+        if ($res->num_rows) 
         {
-            if($result->num_rows)
+            $row1 = $res->fetch_assoc();
+                $bmark[] = $row1;
+        }
+    }
+    if(isset($_POST['editBid']))
+    {
+        $time_type = $conn->real_escape_string($_POST['time_type']);
+        $time_no = $conn->real_escape_string($_POST['time_no']);
+        $description = $conn->real_escape_string($_POST['description']);
+        $bid_expected = $_POST['bid_expected'];
+        $sql = "update bidding set time_no = '$time_no' , time_type = '$time_type', description = '$description' where c_id='$USER_ID' and t_id='$t_id'";
+        if($result = $conn->query($sql))
+        {
+            $done = "Your Bid is updated Successfully";
+        }
+        else
+        {
+            echo $conn->error;
+        }
+    }
+
+
+
+
+    $sql = "select pt.*,up.* from post_task pt,user_profile up where pt.id='$t_id' and up.u_id=pt.e_id";
+    if ($result = $conn->query($sql)) {
+        if ($result->num_rows) {
+            $row = $result->fetch_assoc();
+            $taskDetails = $row;
+        }
+    }
+
+    $rate = $taskDetails['u_id'];
+    $sql="SELECT CAST(AVG(ratings) AS DECIMAL(10,1)) as rates FROM employer_reviews where c_id='$rate'";
+    if ($result = $conn->query($sql)) {
+        if ($result->num_rows) {
+            $row = $result->fetch_assoc();
+            $emp_rate = $row;
+            // print_r($emp_rate);
+        }
+    }
+
+
+    $sql = "select * from skill_tasks where t_id='$t_id'";
+    if ($result = $conn->query($sql)) {
+        if ($result->num_rows) {
+            while ($row = $result->fetch_assoc()) {
+                $skills[] = $row;
+            }
+        }
+    }
+    // print_r($skills);
+
+    $sql = "SELECT * from bidding where t_id='$t_id' and c_id='$USER_ID' and stat=0";
+    if($result = $conn->query($sql))
+    {
+        if($result->num_rows)
+        {
+            $row = $result->fetch_assoc();
+            $existing=$row;
+            
+        }
+        // print_r($existing);
+    }
+    else
+    {
+        echo $conn->error;
+    }
+
+    $sql = "select up.*,r.* from user_profile up,post_task pt,ratings r  where pt.id='$t_id' and pt.e_id=up.u_id and pt.e_id=r.u_id";
+    if ($result = $conn->query($sql)) {
+        if ($result->num_rows) {
+            $row = $result->fetch_assoc();
+            $employerDetails = $row;
+        }
+    }
+
+    $sql="select * from uploaded_documents where t_id='$t_id'";
+    if ($result = $conn->query($sql)) {
+        if ($result->num_rows) {
+            while($row = $result->fetch_assoc())
             {
-                while($row=$result->fetch_assoc()){
-                    $bidders[$row["id"]] = $row;
-                    $sql = "select * from skill_tasks where t_id=".$row["id"];
-                    if($res =$conn->query($sql))
-                    {
-                        if($res->num_rows)
-                        {
-                            while($row1=$res->fetch_assoc())
-                            {
-                                $taskDetails[$row["id"]]["skills"][] = $row1;
-                            }
+                $attachments[] = $row;
+            }
+        }
+    }
+
+    // to calculate the rating of employer
+   $sql = "select r.* from post_task pt,ratings r where pt.id='$t_id' and pt.e_id=r.u_id";
+    if($result =$conn->query($sql))
+    {
+        if($result->num_rows)
+        {
+            while($row=$result->fetch_assoc()){
+                $employerRatings[] = $row;
+            }
+        } 
+    }
+
+    $sql = "select up.u_id,up.f_name,up.l_name,up.avtar,up.nationality,up.hourly_rate,b.t_id,b.c_id,b.bid_expected,b.description,b.time_no,b.time_type from bidding b , user_profile up where b.t_id='$t_id' and b.c_id=up.u_id ";
+    if ($result = $conn->query($sql)) {
+        if ($result->num_rows) {
+            while ($row = $result->fetch_assoc()) {
+                $bidders[$row['u_id']] = $row;
+                $sql = "select * from ratings where u_id=" . $row['u_id'];
+                if ($res = $conn->query($sql)) {
+                    if ($res->num_rows) {
+                        while ($row1 = $res->fetch_assoc()) {
+                            $bidders[$row["u_id"]]["ratings"][] = $row1;
                         }
                     }
                 }
-            } 
+            }
         }
-
-
     }
 
-?>
 
+}
+?>
+<style>
+    .biddescription{padding-left:0 !important;padding-right:0 !important}
+</style>
 <!-- Wrapper -->
 <div id="wrapper">
 
     <?php
-        require_once 'navbar.php';
+    require_once 'navbar.php';
     ?>
     <div class="clearfix"></div>
     <!-- Header Container / End -->
@@ -116,27 +191,64 @@
                 <div class="col-md-12">
                     <div class="single-page-header-inner">
                         <div class="left-side">
-                            <div class="header-image"><a href="single-company-profile.html"><img
-                                        src="images/browse-companies-02.png" alt=""></a></div>
+                            <div class="header-image"><a
+                                    href="single-company-profile?token=<?=$taskDetails['e_id']?>"><img
+                                        src="<?= $taskDetails['avtar'] ?>" alt=""></a></div>
                             <div class="header-details">
-                                <h3><?=$taskDetails['t_name']?></h3>
+                                <h3><?= $taskDetails['t_name'] ?></h3>
                                 <h5>About the Employer</h5>
                                 <ul>
                                     <?php
-                                    echo $nationality = $employerDetails['nationality'];
+                                    $nationality = $taskDetails['nationality'];
                                     $country_code = strtolower($nationality);
-                                ?>
-                                    <li><a href="single-company-profile.html"><i
-                                                class="icon-material-outline-business"></i> Acue</a></li>
+                                    ?>
+                                    <li><a href="single-company-profile?token=<?=$taskDetails['e_id']?>"><i
+                                                class="icon-material-outline-business"></i>
+                                            <?= $taskDetails['f_name'] . ' ' . $taskDetails['l_name'] ?></a></li>
                                     <li>
-                                        <div class="star-rating" data-rating="<?=$employerDetails['rating']?>"></div>
+                                        <?php
+                                            $totalRatings=0;
+                                            $i=1;
+                                            foreach($employerRatings as $rating)
+                                            {
+                                                $totalRatings = $totalRatings + $rating['rating'];
+                                                $i++;
+                                            }
+                                            
+                                            $finalRatings=$totalRatings/$i;
+                                            if($emp_rate['rates'] == 0 )
+                                            {
+                                                ?>
+                                                   <i class="bi bi-star-fill" style="color:gold"></i> No ratings
+                                                <?php
+                                            }
+                                            else
+                                            {
+                                                ?>
+                                                    <div class="star-rating" data-rating="<?=$emp_rate['rates']?>"></div>
+                                                <?php
+                                            }
+                                        ?>
+                                        
+                                        
                                     </li>
                                     <li><img class="flag"
-                                            src="http://api.hostip.info/images/flags/<?=$country_code?>.gif" alt=""
-                                            title="<?=$employerDetails['nationality']?>" alt=""
-                                            data-tippy-placement="top" /><?=$employerDetails['nationality']?></li>
+                                            src="http://api.hostip.info/images/flags/<?= $country_code ?>.gif" alt=""
+                                            title="<?= $taskDetails['nationality'] ?>" alt=""
+                                            data-tippy-placement="top" /><?= $taskDetails['nationality'] ?></li>
                                     <li>
+                                        <?php
+                                        if ($taskDetails['status'] == 2) {
+                                        ?>
                                         <div class="verified-badge-with-title">Verified</div>
+                                        <?php
+                                        } else if ($taskDetails['status'] == 1) {
+                                        ?>
+                                        <div class="verified-badge-with-title">Verified</div>
+                                        <?php
+                                        }
+                                        ?>
+
                                     </li>
                                 </ul>
                             </div>
@@ -144,20 +256,20 @@
                         <div class="right-side">
                             <div class="salary-box">
                                 <?php
-                                $pay_type='';
+                                $pay_type = '';
                                 $type = $taskDetails['pay_type'];
-                                switch ($type){
+                                switch ($type) {
                                     case 1:
-                                        $pay_type="Fixed price";
+                                        $pay_type = "Fixed price";
                                         break;
                                     case 2:
                                         $pay_type = "Hourly rate";
                                         break;
                                 }
-                            ?>
+                                ?>
                                 <div class="salary-type">Project Budget</div>
-                                <div class="salary-amount">$<?=$taskDetails['min_salary']?> -
-                                    $<?=$taskDetails['max_salary']?> </div>( <?=$pay_type?> )
+                                <div class="salary-amount">$<?= $taskDetails['min_salary'] ?> -
+                                    $<?= $taskDetails['max_salary'] ?> </div>( <?= $pay_type ?> )
                             </div>
                         </div>
                     </div>
@@ -166,21 +278,31 @@
         </div>
     </div>
 
-    
+
 
 
     <!-- Page Content
     ================================================== -->
     <div class="container">
-    <?php
-        if(isset($bidded)){
+        <?php
+        if (isset($bidded)) {
+        ?>
+        <div class="alert alert-success" role="alert">
+            You has successfully bidded for this task !!!
+        </div>
+        <?php
+        }
+        if(isset($done))
+        {
             ?>
                 <div class="alert alert-success" role="alert">
-                    You has successfully bidded for this task !!!
+                    <?=$done?>
                 </div>
             <?php
         }
-    ?>
+        
+        ?>
+
         <div class="row">
 
             <!-- Content -->
@@ -189,14 +311,48 @@
                 <!-- Description -->
                 <div class="single-page-section">
                     <h3 class="margin-bottom-25">Project Description</h3>
-                    <p><?=$taskDetails['t_description']?></p>
+                    <p><?= $taskDetails['t_description'] ?></p>
                 </div>
 
                 <!-- Atachments -->
                 <div class="single-page-section">
                     <h3>Attachments</h3>
                     <div class="attachments-container">
-                        <a href="#" class="attachment-box ripple-effect"><span>Project Brief</span><i>PDF</i></a>
+                    <?php
+                        if(isset($attachments)) 
+                        {
+                            $counter=0;
+                            foreach($attachments as $file)
+                            {
+
+                                $ext=pathinfo($file['document'],PATHINFO_EXTENSION);
+                                if(strtolower($ext)=="pdf")
+                                {
+                                    
+                                ?>
+                                <div class="col-md-6" id="file<?=$counter?>">
+                                    <div class="col-md-4">
+                                        <a href="uploads/<?=$file['document']?>"  target="_blank"><img src="images/PDF.svg" width="100px" height="100px"/></a>            
+                                    </div>
+                                </div>
+                                <?php
+                                }
+                                else
+                                {
+                                ?>
+                                <div class="col-md-6" id="file<?=$counter?>">
+                                    <div class="col-md-4">
+                                        <a href="uploads/<?=$file['document']?>" target="_blank"><img src="uploads/<?=$file['document']?>" width="100px" height="100px"/></a>
+                                    </div>
+                                </div>
+                                <?php
+                                }
+                            }
+                        }
+                    ?>
+
+                                                
+
                     </div>
                 </div>
 
@@ -205,12 +361,12 @@
                     <h3>Skills Required</h3>
                     <div class="task-tags">
                         <?php
-                            foreach ($skills as $skill){
-                                ?>
-                        <span><?=$skill['skills']?></span>
+                        foreach ($skills as $skill) {
+                        ?>
+                        <span><?= $skill['skills'] ?></span>
                         <?php
-                            }
-                            ?>
+                        }
+                        ?>
                     </div>
                 </div>
                 <div class="clearfix"></div>
@@ -218,13 +374,15 @@
                 <!-- Freelancers Bidding -->
                 <div class="boxed-list margin-bottom-60">
                     <div class="boxed-list-headline">
-                        <h3><i class="icon-material-outline-group"></i> Freelancers Bidding</h3>
+                        <h3><i class="icon-material-outline-group"></i>Bidding</h3>
                     </div>
                     <ul class="boxed-list-ul">
                         <?php
                         $id = $taskDetails['e_id'];
-                        foreach($bidders as $bidder){
-                            if($bidder['c_id'] != $id){
+                        if (isset($bidders))
+                        {
+                        foreach ($bidders as $bidder) {
+                            if ($bidder['c_id'] != $id) {
                         ?>
                         <li>
                             <div class="bid">
@@ -232,8 +390,8 @@
                                 <div class="bids-avatar">
                                     <div class="freelancer-avatar">
                                         <div class="verified-badge"></div>
-                                        <a href="single-freelancer-profile.html"><img
-                                                src="images/user-avatar-big-01.jpg" alt=""></a>
+                                        <a href="profile?token=<?= $bidder['c_id'] ?>"><img
+                                                src="<?= $bidder['avtar'] ?>" alt=""></a>
                                     </div>
                                 </div>
 
@@ -244,14 +402,40 @@
                                         <?php
                                                 $nationality = $bidder['nationality'];
                                                 $country_code = strtolower($nationality);
-                                            ?>
-                                        <h4><a href="single-freelancer-profile.html"><?=$bidder['f_name']?>
-                                                <?=$bidder['l_name']?> <img class="flag"
-                                                    src="http://api.hostip.info/images/flags/<?=$country_code?>.gif"
-                                                    alt="" title="<?=$employerDetails['nationality']?>" alt=""
+
+                                                $totalRatings=0;
+                                                $i=0;
+                                                foreach($bidder['ratings'] as $rating)
+                                                {
+                                                    $totalRatings = $totalRatings + $rating['rating'];
+                                                    $i++;
+                                                }
+                                                if($i==0){
+                                                    $finalRatings=0;
+                                                }
+                                                else{
+                                                    $finalRatings=$totalRatings/$i;
+                                                    $showrating='true';
+                                                }
+                                                ?>
+                                        <h4><a href="profile?token=<?= $bidder['c_id'] ?>"><?= $bidder['f_name'] ?>
+                                                <?= $bidder['l_name'] ?> <img class="flag"
+                                                    src="http://api.hostip.info/images/flags/<?= $country_code ?>.gif"
+                                                    alt="" title="<?= $employerDetails['nationality'] ?>" alt=""
                                                     data-tippy-placement="top"></a></h4>
-                                        <div class="star-rating" data-rating="<?=$bidder['bid_expected']?>"></div>
-                                        <!-- <span class="not-rated">Minimum of 3 votes required</span> -->
+                                                    <p><?=$bidder['description']?></p>
+                                        <?php
+                                            if(isset($showrating)){
+                                                ?>
+                                                <div class="star-rating" data-rating="<?=$finalRatings?>"></div>
+                                                <?php
+                                            }            
+                                            else{
+                                                ?>
+                                                <span class="not-rated"><i class="bi bi-star-fill" style="color:gold"></i>No Ratings</span>
+                                                <?php
+                                            }
+                                        ?>
                                     </div>
                                 </div>
 
@@ -259,26 +443,35 @@
                                 <div class="bids-bid">
                                     <div class="bid-rate">
                                         <?php
-                                                $time_type='';
+                                                $time_type = '';
                                                 $type = $bidder['time_type'];
-                                                switch ($type){
+                                                switch ($type) {
                                                     case 1:
-                                                        $time_type="Hours";
+                                                        $time_type = "Hours";
                                                         break;
                                                     case 2:
                                                         $time_type = "Days";
                                                         break;
                                                 }
-                                            ?>
-                                        <div class="rate">$<?=$bidder['bid_expected']?></div>
-                                        <span>in <?=$bidder['time_no']?> <?=$time_type?></span>
+                                                ?>
+                                        <div class="rate">$<?= $bidder['bid_expected'] ?></div>
+                                        <span>in <?= $bidder['time_no'] ?> <?= $time_type ?></span>
                                     </div>
                                 </div>
                             </div>
                         </li>
                         <?php
+                                }
                             }
                         }
+                        else
+                        {
+                            ?>
+                                <div class="alert alert-primary">
+                                    No Bidders Found for this task!!
+                                </div>
+                            <?php
+                        }    
                         ?>
                     </ul>
                 </div>
@@ -290,14 +483,28 @@
             <!-- <form method="post"> -->
             <div class="col-xl-5 col-lg-5">
                 <div class="sidebar-container">
-                    <?php
-                            $date = date('Y-m-d H:i:s');
-                            $presentTime = new DateTime($date);
-                            $end_date =new DateTime($taskDetails['end_date']);
-                            $interval = $end_date->diff($presentTime);
+                <?php
+                    $date = date('Y-m-d H:i:s');
+                    $presentTime = new DateTime($date);
+                    $end_date = new DateTime($taskDetails['end_date']);
+                    $interval = $end_date->diff($presentTime);
+                    ?>
+                    
+                    
+                        <?php
+                        if(date("Y-m-d") < $taskDetails['end_date'])
+                        {
+                        ?> 
+                            <div class="countdown green margin-bottom-35"><?php echo $interval->format('%d days %H hours %i minutes')?> left </div>
+                        <?php
+                        }
+                        else if(date("Y-m-d") > $taskDetails['end_date'])
+                        {
                         ?>
-                    <div class="countdown green margin-bottom-35">
-                        <?php echo $interval->format('%d days %H hours %i minutes')?> left</div>
+                            <div class="countdown green margin-bottom-35">Closed <?php echo $interval->format('%d days %H hours %i minutes')?> ago</div>
+                        <?php
+                        }
+                        ?>
 
                     <div class="sidebar-widget">
                         <div class="bidding-widget">
@@ -311,15 +518,42 @@
                                     <span class="bidding-detail">Set your <strong>minimal rate</strong></span>
 
                                     <!-- Price Slider -->
-                                    <div class="bidding-value">$<span id="biddingVal"></span></div>
-                                    <input class="bidding-slider" type="text" name="bid_expected"
-                                        data-slider-handle="custom" data-slider-currency="$" data-slider-min="10"
-                                        data-slider-max="1000" data-slider-value="auto" data-slider-step="50"
-                                        data-slider-tooltip="hide" />
+                                    <!-- <div class="bidding-value">$<span id="biddingVal"></span></div>
+                                        <input class="bidding-slider"   type="text" name="bid_expected"
+                                            data-slider-handle="custom" data-slider-currency="$" data-slider-min="10"
+                                            data-slider-max="1000" data-slider-value="auto" data-slider-step="50"
+                                            data-slider-tooltip="hide" />
+                                            <div class="qtyButtons with-border"> -->
+                                    <div class="bidding-field">
+                                        <!-- Quantity Buttons -->
+                                        <div class="qtyButtons with-border">
+                                            <div class="qtyDec"></div>
+                                            <?php
+                                                if(!isset($existing))
+                                                {
+                                                    ?>
+                                                         <input type="text" name="bid_expected" id="bid_expected" placeholder="eg. 3"
+                                                        value="0">
+                                                    <?php
+                                                }
+                                                else
+                                                {
+                                                    ?>
+                                                        <input type="text" name="bid_expected" id="bid_expected" placeholder="eg. 3"
+                                                        value="<?=$existing['bid_expected']?>">
+                                                    <?php
+                                                }
+                                            ?>
+                                            
+                                            <!-- <input type="hidden" id="etime_no" name="etime_no" class="form-control"> -->
+                                            <div class="qtyInc"></div>
+                                        </div>
+                                    </div>
+
+
                                     <!-- onchange="change_bidding_amount(value)" -->
                                     <!-- Headline -->
-                                    <span class="bidding-detail margin-top-30">Set your <strong>delivery
-                                            time</strong></span>
+                                    <span class="bidding-detail margin-top-30">Set your <strong>estimated task time</strong></span>
 
                                     <!-- Fields -->
                                     <div class="bidding-fields">
@@ -327,49 +561,119 @@
                                             <!-- Quantity Buttons -->
                                             <div class="qtyButtons">
                                                 <div class="qtyDec"></div>
-                                                <input name="time_no" type="text" placeholder="eg. 2" name="qtyInput">
+                                                <?php
+                                                if(!isset($existing))
+                                                {
+                                                    ?>
+                                                        <input name="time_no" type="text" placeholder="eg. 2" name="qtyInput" value="0">            
+                                                    <?php
+                                                }
+                                                else
+                                                {
+                                                    ?>
+                                                        <input name="time_no" type="text" placeholder="eg. 2" name="qtyInput" value="<?=$existing['time_no']?>">            
+                                                    <?php
+                                                }
+                                                ?>
                                                 <div class="qtyInc"></div>
                                             </div>
                                         </div>
                                         <div class="bidding-field">
-                                            <?php
-                                                    $time_type_days ='';
-                                                    $time_type_hours=''; 
-                                                    $type = $bidder['time_type'];
-                                                    switch ($TYPE){
-                                                        case 1:
-                                                            $time_type_hours="checked";
-                                                            break;
-                                                        case 2:
-                                                            $time_type_days = "checked";
-                                                            break;
-                                                    }
+                                        <?php
+                                            if(isset($existing))
+                                            {
+                                                $ghanta = '';
+                                                $minutes = '';
+                                                $yoyo = $existing['time_type'];
+                                                if($yoyo == 1)
+                                                {
+                                                    $ghanta = 'checked';
+                                                }
+                                                else if($yoyo == 2)
+                                                {
+                                                    $din = 'checked';
+                                                }
+                                                // echo $ghanta;
+                                                // echo $din;
                                                 ?>
+                                                    <select class="selectpicker default yoyo" name="time_type">
+                                                    <option value="2" <?= $din ?>>Days</option>
+                                                        <option value="1" <?= $ghanta ?>>Hours</option>
+                                                        
+                                                    </select>
+                                                <?php
+                                            }
+                                            else
+                                            {
+
+                                                $time_type_days = '';
+                                                $time_type_hours = '';
+                                                $type = $bidder['time_type'];
+                                                switch ($type) {
+                                                    case 1:
+                                                        $time_type_hours = "checked";
+                                                        break;
+                                                    case 2:
+                                                        $time_type_days = "checked";
+                                                        break;
+                                                }
+                                            
+                                        ?>
                                             <select class="selectpicker default" name="time_type">
-                                                <option value="1" <?=$time_type_hours?>>Hours</option>
-                                                <option value="2" <?=$time_type_hours?>>Days</option>
+                                                <option value="1" <?= $time_type_hours ?>>Hours</option>
+                                                <option value="2" <?= $time_type_hours ?>>Days</option>
                                             </select>
+                                            <?php
+                                                }
+                                            ?>
                                         </div>
 
-                                        <div class="col-xl-12 margin-top-30">
+                                        <div class="col-xl-12 margin-top-30 biddescription">
                                             <div class="submit-field">
                                                 <h5>Write your bid</h5>
                                                 <textarea name="description" cols="30" rows="8"
-                                                    class="with-border"><?=$profile['intro']?></textarea>
+                                                    class="with-border"><?= $profile['intro'] ?><?=$existing['description']?></textarea>
                                             </div>
                                         </div>
 
                                     </div>
 
                                     <!-- Button -->
-                                    <button name="placeBid" id="snackbar-place-bid"
-                                        class="button ripple-effect move-on-hover full-width margin-top-30"><span>Place a
-                                            Bid</span></button>
+                                        <?php
+                                        if(date("Y-m-d") > $taskDetails['end_date'])
+                                        {
+                                        ?>
+                                            <div class="countdown green margin-bottom-35">Closed <?php echo $interval->format('%d days %H hours %i minutes')?> ago</div>
+                                        <?php
+                                        }
+                                        
+
+                                        else if(isset($existing))
+                                        {
+                                            ?>
+                                                <button name="editBid" id="snackbar-place-bid"
+                                                    class="button ripple-effect move-on-hover full-width margin-top-30">
+                                                    <span>
+                                                        Edit Your Bid
+                                                    </span>
+                                                </button>
+                                            <?php
+                                        }
+                                        else{
+                                            ?>
+                                             <button name="placeBid" id="snackbar-place-bid"
+                                                class="button ripple-effect move-on-hover full-width margin-top-30"><span>Place
+                                                    a
+                                                    Bid</span></button>
+                                            
+                                            <?php
+                                        }
+                                    ?>
+                                   
 
                                 </div>
                             </form>
-                            <div class="bidding-signup">Don't have an account? <a href="signup.php"
-                                    class="register-tab sign-in popup-with-zoom-anim">Sign Up</a></div>
+                            
                         </div>
                     </div>
 
@@ -378,11 +682,36 @@
                         <h3>Bookmark or Share</h3>
 
                         <!-- Bookmark Button -->
-                        <button class="bookmark-button margin-bottom-25">
-                            <span class="bookmark-icon"></span>
-                            <span class="bookmark-text">Bookmark</span>
-                            <span class="bookmarked-text">Bookmarked</span>
-                        </button>
+                        
+                           <?php
+                           if(isset($bmark))
+                           {
+                           ?>
+                            <button onclick="change_bookmark(<?=$taskDetails['id']?>)"
+                            class="bookmark-button margin-bottom-25">
+                                <span class="bookmark-icon"></span>
+                                <span class="bookmark-text">Bookmarked</span>
+                                <span class="bookmarked-text">Bookmark</span>
+                                
+                            </button>
+                            <?php
+                           }
+                           else
+                           {
+                            ?>
+                               <button onclick="change_bookmark(<?= $taskDetails['id']?>)"
+                            class="bookmark-button margin-bottom-25">
+                                <span class="bookmark-icon"></span>
+                                <span class="bookmark-text">Bookmark</span>
+                                <span class="bookmarked-text">Bookmarked</span>
+                                
+                            </button>
+                            <?php
+                           }
+                           ?>
+                            
+                            
+                        
 
                         <!-- Copy URL -->
                         <div class="copy-url">
@@ -398,7 +727,8 @@
                             <div class="share-buttons-content">
                                 <span>Interesting? <strong>Share It!</strong></span>
                                 <ul class="share-buttons-icons">
-                                    <li><a id='facebook' href="https://www.facebook.com/sharer/sharer.php?u=" target="_blank" data-button-color="#3b5998" title="Share on Facebook"
+                                    <li><a id='facebook' href="https://www.facebook.com/sharer/sharer?u="
+                                            target="_blank" data-button-color="#3b5998" title="Share on Facebook"
                                             data-tippy-placement="top"><i class="icon-brand-facebook-f"></i></a></li>
                                     <li><a href="#" data-button-color="#1da1f2" title="Share on Twitter"
                                             data-tippy-placement="top"><i class="icon-brand-twitter"></i></a></li>
@@ -477,6 +807,7 @@
                     <button class="facebook-login ripple-effect"><i class="icon-brand-facebook-f"></i> Log In via
                         Facebook</button>
                     <button class="google-login ripple-effect"><i class="icon-brand-google-plus-g"></i> Log In via
+
                         Google+</button>
                 </div>
 
@@ -554,19 +885,38 @@
 
 
 <?php
- require_once 'js-links.php';
- require_once 'footer.php';
- ?>
+require_once 'js-links.php';
+require_once 'footer.php';
+?>
 
 <script>
-function change_bidding_amount(amount) {
+// function change_bidding_amount(amount) {
+//     $.ajax({
+//         url: "bid_task_ajax.php",
+//         type: "post",
+//         data: {
+//             userId: '<?= $USER_ID ?>',
+//             changeBidding_amount: true,
+//             amount: amount,
+//         },
+//         success: function(data) {
+//             console.log(data);
+//         },
+//         error: function(data) {
+//             console.log("galti");
+//         }
+//     })
+// }
+
+function change_bookmark(t_id) {
+    console.log(t_id)
     $.ajax({
         url: "bid_task_ajax.php",
         type: "post",
         data: {
-            userId: '<?=$USER_ID?>',
-            changeBidding_amount: true,
-            amount: amount,
+            userId: '<?= $USER_ID ?>',
+            change_bookmark: true,
+            task_id: t_id,
         },
         success: function(data) {
             console.log(data);
@@ -580,10 +930,8 @@ function change_bidding_amount(amount) {
 $(function() {
     var x = window.location.href;
     var link = document.getElementById("facebook"); // store the element
-    
+
     var curHref = link.getAttribute('href'); // get its current href value
     link.setAttribute('href', curHref + x);
-
 })
-
 </script>

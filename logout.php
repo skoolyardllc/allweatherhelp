@@ -1,6 +1,30 @@
 <?php
-    require_once 'lib/core.php';
+session_start();
+if(isset($_SESSION['mode']) )
+{
+ ?>
+    <script type="text/javascript"> 
+            
+           window.ReactNativeWebView.postMessage('logout')   
+     </script>  
+  <?php  
+   
+     
     session_destroy();
-    setcookie(time() + (-86400 * 30), "/");
+    // header("location:login.php");
+}
+else
+{
+     
+    session_destroy();
     header("location:login.php");
+}
+    
+
+// print_r($_SESSION);
 ?>
+
+ 
+   
+    
+   

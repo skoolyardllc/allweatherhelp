@@ -23,7 +23,7 @@
 <div class="clearfix"></div>
 <!-- Header Container / End -->
 
-
+ 
     <!-- Dashboard Container -->
     <div class="dashboard-container">
 
@@ -36,21 +36,21 @@
             <div class="dashboard-content-inner" >
                 
                 <!-- Dashboard Headline -->
-                <div class="dashboard-headline">
-                    <h3>Manage Jobs</h3>
+                    <div class="dashboard-headline">
+                        <h3>Manage Jobs</h3>
 
-                    <!-- Breadcrumbs -->
-                    <nav id="breadcrumbs" class="dark">
-                        <ul>
-                            <li><a href="#">Home</a></li>
-                            <li><a href="#">Dashboard</a></li>
-                            <li>Manage Jobs</li>
-                        </ul>
-                    </nav>
-                </div>
-        
-                <!-- Row -->
-                <div class="row">
+                        <!-- Breadcrumbs -->
+                        <nav id="breadcrumbs" class="dark">
+                            <ul>
+                                <li><a href="index">Home</a></li>
+                                <li><a href="dashboard">Dashboard</a></li>
+                                <li>Manage Jobs</li>
+                            </ul>
+                        </nav>
+                    </div>
+            
+                    <!-- Row -->
+                    <div class="row">
 
                     <!-- Dashboard Box -->
                     <div class="col-xl-12">
@@ -204,7 +204,7 @@
                 <!-- Footer -->
                 <div class="dashboard-footer-spacer"></div>
                 <div class="small-footer margin-top-15">
-                    <ul class="footer-social-links">
+                    <!-- <ul class="footer-social-links">
                         <li>
                             <a href="#" title="Facebook" data-tippy-placement="top">
                                 <i class="icon-brand-facebook-f"></i>
@@ -225,7 +225,7 @@
                                 <i class="icon-brand-linkedin-in"></i>
                             </a>
                         </li>
-                    </ul>
+                    </ul> -->
                     <div class="clearfix"></div>
                 </div>
                 <!-- Footer / End -->
@@ -244,3 +244,14 @@
     require_once 'js-links.php';
     ?>
 
+<script>
+    $("#dashboard").removeClass('active');
+	$("#bookmarks").removeClass('active');
+	$("#reviews").removeClass('active');
+	$("#jobs").removeClass('active');
+	$("#tasks").removeClass('active');
+	$("#settings").removeClass('active');
+	$("#milestone").removeClass('active');
+	$("#jobs").addClass('active');
+
+</script>
